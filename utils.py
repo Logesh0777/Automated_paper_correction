@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 
 def get_env_variable(var_name: str, default: Optional[str] = None) -> str:
@@ -145,32 +145,21 @@ def get_api_key(api_name: str = "GEMINI_API_KEY") -> str:
     return get_env_variable(api_name, "")
 
 
-def verify_gemini_api_key() -> tuple[bool, str]:
+def verify_openrouter_api_key() -> tuple[bool, str]:
     """
-    Verify that Gemini API key is configured and valid.
-    
-    Returns:
-        Tuple of (is_valid, message)
+    Verify that OpenRouter API key is configured and valid.
     """
     try:
-        api_key = os.getenv("GEMINI_API_KEY", "")
-        
-        if not api_key:
-            return False, "GEMINI_API_KEY not found in environment variables. Please set it in .env file or environment."
-        
+        api_key = os.getenv("OPENROUTER_API_KEY", "")
+        if not api_key or api_key == "your-openrouter-api-key":
+            return False, "OPENROUTER_API_KEY not found in environment variables."
         if len(api_key) < 20:
-            return False, "GEMINI_API_KEY appears to be invalid (too short)."
-        
-        # Basic format validation for Google API keys
-        if not api_key.startswith("AIza"):
-            return False, "GEMINI_API_KEY format appears invalid (should start with 'AIza')."
-        
-        # Skip actual API client initialization during verification to avoid SSL/network issues
-        # The actual API call will validate the key when the system is used
-        return True, f"Gemini API key found (format valid, length: {len(api_key)} chars)."
-    
+            return False, "OPENROUTER_API_KEY appears to be invalid (too short)."
+        return True, f"OpenRouter API key found (length: {len(api_key)} chars)."
     except Exception as e:
-        return False, f"Error verifying Gemini API key: {str(e)}"
+        return False, f"Error verifying OpenRouter API key: {str(e)}"
+
+
 
 
 def check_api_prerequisites() -> tuple[bool, List[str]]:
@@ -181,13 +170,17 @@ def check_api_prerequisites() -> tuple[bool, List[str]]:
         Tuple of (all_ok, list_of_issues)
     """
     issues = []
+    all_ok = True
     
-    # Check Gemini API key
-    is_valid, message = verify_gemini_api_key()
+    # Check OpenRouter API key
+    is_valid, message = verify_openrouter_api_key()
     if not is_valid:
-        issues.append(f"❌ {message}")
+        issues.append(f"❌ OpenRouter: {message}")
+        all_ok = False
     else:
-        issues.append(f"✅ {message}")
+        issues.append(f"✅ OpenRouter: {message}")
+        
+
     
     # Check internet connectivity (simple check)
     try:
@@ -197,5 +190,4 @@ def check_api_prerequisites() -> tuple[bool, List[str]]:
     except OSError:
         issues.append("⚠️ Internet connection may be unavailable.")
     
-    all_ok = is_valid  # Main requirement is the API key
     return all_ok, issues

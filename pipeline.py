@@ -3,7 +3,15 @@ Pipeline orchestrator that connects all modules into a seamless workflow.
 Coordinates extraction, comparison, evaluation, and feedback generation.
 Updated to support few-shot learning with an optional reference paper.
 """
+import sys
 import asyncio
+
+# Fix for Windows console emoji/unicode printing
+try:
+    if sys.stdout.encoding.lower() != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 import time
@@ -12,7 +20,7 @@ from extraction import DocumentExtractor, extract_documents
 from compare import SemanticComparator
 from evaluation import Evaluator
 from feedback import FeedbackGenerator
-from utils import save_json, ensure_directory_exists, verify_gemini_api_key, check_api_prerequisites
+from utils import save_json, ensure_directory_exists, check_api_prerequisites
 
 
 class CorrectionPipeline:
@@ -22,7 +30,6 @@ class CorrectionPipeline:
         self,
         comparison_method: str = "gemini",
         use_ai_feedback: bool = False,
-        total_marks: float = 100.0,
         output_dir: str = "results"
     ):
         """
@@ -30,13 +37,13 @@ class CorrectionPipeline:
         """
         self.comparison_method = comparison_method
         self.use_ai_feedback = use_ai_feedback
-        self.total_marks = total_marks
         self.output_dir = output_dir
         
         # Initialize components
         self.extractor = DocumentExtractor()
         self.comparator = SemanticComparator(method=comparison_method)
-        self.evaluator = Evaluator(total_marks=total_marks)
+        # Evaluator no longer needs total_marks since it's dynamic
+        self.evaluator = Evaluator()
         self.feedback_generator = FeedbackGenerator(use_ai=use_ai_feedback)
         
         # Ensure output directory exists
@@ -161,7 +168,6 @@ class CorrectionPipeline:
             "pipeline_metadata": {
                 "comparison_method": self.comparison_method,
                 "ai_feedback_enabled": self.use_ai_feedback,
-                "total_marks": self.total_marks,
                 "few_shot_enabled": reference_file_path is not None
             }
         }
@@ -199,7 +205,6 @@ def run_correction_pipeline(
     reference_file_path: Optional[str] = None,
     comparison_method: str = "gemini",
     use_ai_feedback: bool = False,
-    total_marks: float = 100.0,
     output_dir: str = "results",
     save_results: bool = True
 ) -> Dict[str, Any]:
@@ -207,7 +212,6 @@ def run_correction_pipeline(
     pipeline = CorrectionPipeline(
         comparison_method=comparison_method,
         use_ai_feedback=use_ai_feedback,
-        total_marks=total_marks,
         output_dir=output_dir
     )
     

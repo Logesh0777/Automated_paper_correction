@@ -69,7 +69,7 @@ async def example_async_usage():
     
     print("\nComparison Results:")
     for i, comp in enumerate(results['comparison_results'], 1):
-        print(f"Page {i}: {comp['similarity']*100:.2f}% similarity")
+        print(f"Question {comp.get('question_id', i)}: {comp['similarity']*100:.2f}% similarity")
     
     print("\nEvaluation:")
     evaluation = results['evaluation_report']['evaluation']
@@ -149,7 +149,7 @@ def example_accessing_detailed_results():
     # Access comparison results
     print("\n2. Comparison Results:")
     for comp in results['comparison_results']:
-        print(f"   Page {comp['student_page_no']}: "
+        print(f"   Question {comp.get('question_id', '?')}: "
               f"Similarity = {comp['similarity']*100:.2f}%")
     
     # Access evaluation details
@@ -159,11 +159,11 @@ def example_accessing_detailed_results():
     print(f"   Percentage: {evaluation['percentage']}%")
     print(f"   Grade: {evaluation['grade']}")
     
-    # Access page-wise scores
-    print("\n4. Page-wise Scores:")
-    for page in evaluation['page_scores']:
-        print(f"   Page {page['page_no']}: {page['marks_awarded']}/{page['max_marks']} "
-              f"(Similarity: {page['similarity_score']}%)")
+    # Access question-wise scores
+    print("\n4. Question-wise Scores:")
+    for item in evaluation.get('item_scores', []):
+        print(f"   Question {item['item_no']}: {item['marks_awarded']}/{item['max_marks']} "
+              f"(Similarity: {item['similarity_score']}%)")
     
     # Access feedback
     print("\n5. Feedback:")
